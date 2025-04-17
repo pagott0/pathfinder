@@ -1,3 +1,9 @@
+#pathfinder.
+
+I was studying the A* algorithm for finding the shortest path between two points. So, I had the idea to 
+create a visual website where users could see the algorithm acting and finding the shortest path.
+Also have the Dijkstra implementation, so you can see when they act diferently.
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
