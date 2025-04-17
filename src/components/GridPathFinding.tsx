@@ -10,6 +10,8 @@ export default function GridPathfinding() {
   const [start, setStart] = useState<Coord>({ x: 0, y: 0 });
   const [end, setEnd] = useState<Coord>({ x: 5, y: 5 });
   const [path, setPath] = useState<Coord[]>([]);
+  const [visitedAStar, setVisitedAStar] = useState<Coord[]>([]);
+  const [visitedDijkstra, setVisitedDijkstra] = useState<Coord[]>([]);
   const [pathDijkstra, setPathDijkstra] = useState<Coord[]>([]);
   const [obstacles, setObstacles] = useState<Set<string>>(new Set());
 
@@ -28,15 +30,19 @@ export default function GridPathfinding() {
   };
 
   const calculatePath = () => {
-    const result = aStar(start, end, obstacles);
+    const { path: result, visited } = aStar(start, end, obstacles);
     setPath([]); // limpar antes
-    animatePath(result);
+    setVisitedAStar([]); // limpar antes
+    animateVisited(visited);
+    setTimeout(() => animatePath(result), visited.length * 100); // espera a animação dos visitados terminar
   };
 
   const calculatePathDijkstra = () => {
-    const result = dijkstra(start, end, obstacles);
+    const { path: result, visited } = dijkstra(start, end, obstacles);
     setPathDijkstra([]); // limpar antes
-    animatePathDijkstra(result);
+    setVisitedDijkstra([]); // limpar antes
+    animateVisitedDijkstra(visited);
+    setTimeout(() => animatePathDijkstra(result), visited.length * 100); // espera a animação dos visitados terminar
   };
 
   const isInPath = (x: number, y: number) => {
@@ -45,6 +51,14 @@ export default function GridPathfinding() {
 
   const isInPathDijkstra = (x: number, y: number) => {
     return pathDijkstra.some((p) => p.x === x && p.y === y);
+  };
+
+  const isInVisitedAStar = (x: number, y: number) => {
+    return visitedAStar.some((p) => p.x === x && p.y === y);
+  };
+
+  const isInVisitedDijkstra = (x: number, y: number) => {
+    return visitedDijkstra.some((p) => p.x === x && p.y === y);
   };
 
   const toggleObstacle = (x: number, y: number) => {
@@ -60,22 +74,48 @@ export default function GridPathfinding() {
     });
   };
 
+  const animateVisited = async (visited: Coord[]) => {
+    for (let i = 0; i < visited.length; i++) {
+      setVisitedAStar((prev) => [...prev, visited[i]]);
+      await new Promise((res) => setTimeout(res, 100)); // 100ms entre passos
+    }
+  };
+
+  const animateVisitedDijkstra = async (visited: Coord[]) => {
+    for (let i = 0; i < visited.length; i++) {
+      setVisitedDijkstra((prev) => [...prev, visited[i]]);
+      await new Promise((res) => setTimeout(res, 100)); // 100ms entre passos
+    }
+  };
+
   return (
-    <div className="p-4 space-y-2">
+    <div className="p-4 space-y-2 items-center flex flex-col">
       {/* Legenda */}
-      <div className="mt-4 space-x-4 flex flex-row items-center w-full justify-center">
+      <div className="mt-4 space-x-4 flex flex-row items-center w-[70%]  justify-center flex-wrap">
           <span className="text-sm">caption:</span>
           <div className="flex space-x-2 items-center">
             <div className="w-4 h-4 bg-red-400" />
-            <span>A*</span>
+            <span>A* path</span>
           </div>
           <div className="flex space-x-2 items-center">
             <div className="w-4 h-4 bg-yellow-400" />
-            <span>dijkstra</span>
+            <span>dijkstra path</span>
           </div>
           <div className="flex space-x-2 items-center">
             <div className="w-4 h-4 bg-pink-400" />
-            <span>both</span>
+            <span>both paths</span>
+          </div>
+          <div className="flex space-x-2 items-center">
+            <div className="w-4 h-4 bg-purple-200" />
+            <span>A* visited</span>
+          </div>
+          <div className="flex space-x-2 items-center">
+            <div className="w-4 h-4 bg-blue-200" />
+            <span>dijkstra visited</span>
+          </div>
+          <div className="flex space-x-2 items-center">
+            <div className="w-4 h-4 bg-green-200" />
+            <span>both visited</span>
           </div>
       </div>
       <div
@@ -102,6 +142,12 @@ export default function GridPathfinding() {
                   ? "bg-red-400"
                   : isInPathDijkstra(x, y)
                   ? "bg-yellow-400"
+                  : isInVisitedAStar(x, y) && isInVisitedDijkstra(x, y)
+                  ? "bg-green-200"
+                  : isInVisitedAStar(x, y)
+                  ? "bg-purple-200"
+                  : isInVisitedDijkstra(x, y)
+                  ? "bg-blue-200"
                   : obstacles.has(`${x},${y}`)
                   ? "bg-gray-700" // Cor de obstáculo (cinza escuro)
                   : "bg-gray-200"
@@ -190,6 +236,8 @@ export default function GridPathfinding() {
           onClick={() => {
             setPath([]);
             setPathDijkstra([]);
+            setVisitedAStar([]);
+            setVisitedDijkstra([]);
           }}
           className="px-4 py-2 bg-white text-primary border border-primary flex-2"
           >
@@ -212,9 +260,10 @@ export default function GridPathfinding() {
 }
 
 // Algoritmo A* (versão básica para grid com obstáculos)
-function aStar(start: Coord, end: Coord, obstacles: Set<string>): Coord[] {
+function aStar(start: Coord, end: Coord, obstacles: Set<string>): { path: Coord[]; visited: Coord[] } {
   const open: Coord[] = [start];
   const cameFrom = new Map<string, Coord>();
+  const visited: Coord[] = [];
 
   const gScore = new Map<string, number>();
   gScore.set(`${start.x},${start.y}`, 0);
@@ -249,6 +298,8 @@ function aStar(start: Coord, end: Coord, obstacles: Set<string>): Coord[] {
         (fScore.get(`${b.x},${b.y}`) ?? Infinity)
     );
     const current = open.shift()!;
+    visited.push(current); // Adiciona o nó atual aos visitados
+
     if (current.x === end.x && current.y === end.y) {
       // reconstruir caminho
       const path = [current];
@@ -258,7 +309,7 @@ function aStar(start: Coord, end: Coord, obstacles: Set<string>): Coord[] {
         current.x = prev.x;
         current.y = prev.y;
       }
-      return path.reverse();
+      return { path: path.reverse(), visited };
     }
 
     for (const neighbor of getNeighbors(current)) {
@@ -277,16 +328,17 @@ function aStar(start: Coord, end: Coord, obstacles: Set<string>): Coord[] {
     }
   }
 
-  return []; // nenhum caminho encontrado
+  return { path: [], visited }; // nenhum caminho encontrado
 }
 
 function heuristic(a: Coord, b: Coord) {
   return Math.abs(a.x - b.x) + Math.abs(a.y - b.y); // Manhattan
 }
 
-function dijkstra(start: Coord, end: Coord, obstacles: Set<string>): Coord[] {
+function dijkstra(start: Coord, end: Coord, obstacles: Set<string>): { path: Coord[]; visited: Coord[] } {
   const open: Coord[] = [start];
   const cameFrom = new Map<string, Coord>();
+  const visited: Coord[] = [];
 
   const gScore = new Map<string, number>();
   gScore.set(`${start.x},${start.y}`, 0);
@@ -319,6 +371,7 @@ function dijkstra(start: Coord, end: Coord, obstacles: Set<string>): Coord[] {
     );
     
     const current = open.shift()!;
+    visited.push(current); // Adiciona o nó atual aos visitados
 
     if (current.x === end.x && current.y === end.y) {
       // Reconstruir caminho
@@ -329,7 +382,7 @@ function dijkstra(start: Coord, end: Coord, obstacles: Set<string>): Coord[] {
         current.x = prev.x;
         current.y = prev.y;
       }
-      return path.reverse();
+      return { path: path.reverse(), visited };
     }
 
     for (const neighbor of getNeighbors(current)) {
@@ -348,5 +401,5 @@ function dijkstra(start: Coord, end: Coord, obstacles: Set<string>): Coord[] {
     }
   }
 
-  return []; // Nenhum caminho encontrado
+  return { path: [], visited }; // Nenhum caminho encontrado
 }
