@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 
 // Tamanho do grid
 const GRID_ROWS = 15;
