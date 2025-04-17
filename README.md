@@ -4,6 +4,9 @@ I was studying the A* algorithm for finding the shortest path between two points
 create a visual website where users could see the algorithm acting and finding the shortest path.
 Also have the Dijkstra implementation, so you can see when they act diferently.
 
+You can test it: https://pagott0.github.io/pathfinder/
+Enjoy ;)
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
