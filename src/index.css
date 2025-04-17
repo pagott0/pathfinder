@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+input {
+  border: 1px solid #1b2d4a;
+  border-radius: 0.75rem;
+  padding: 0.25rem;
+  color: #1b2d4a;
+}
+
+span {
+  color: #1b2d4a;
+}
+
+p {
+  color: #1b2d4a;
+}
+
+h2 {
+  color: #1b2d4a;
+}
+
+h1 {
+  color: #1b2d4a;
+}
+
+button {
+  background-color: #1b2d4a;
+  color: #fff;
+  border-radius: 0.75rem;
+  padding: 5px;
+  border-color: #1b2d4a;
+}
+
